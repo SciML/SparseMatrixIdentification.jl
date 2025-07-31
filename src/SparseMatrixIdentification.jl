@@ -4,7 +4,6 @@ using SparseArrays
 using BandedMatrices
 using ToeplitzMatrices
 
-
 # check the diagonal of a given matrix, helper for is_toeplitz
 function check_diagonal(A, i, j)
     N = size(A, 1)
@@ -13,7 +12,6 @@ function check_diagonal(A, i, j)
     num = A[i, j]
     i += 1
     j += 1
-
 
     while i <= N && j <= M
         if A[i, j] != num
@@ -27,15 +25,14 @@ end
 
 # check if toeplitz matrix
 function is_toeplitz(mat)
-    N = size(mat, 1)  
-    
+    N = size(mat, 1)
+
     if N == 1
         return true
     end
 
     M = size(mat, 2)
 
-    
     for j in 1:M
         if !check_diagonal(mat, 1, j)
             return false
@@ -53,17 +50,15 @@ end
 
 # compute the percentage banded for a matrix given a bandwidth
 function compute_bandedness(A, bandwidth)
-
-    if bandwidth == 0 
+    if bandwidth == 0
         return 100
     end
-        
+
     n = size(A, 1)
     total_band_positions = 0
     non_zero_in_band = 0
     bandwidth = bandwidth
     for r in 1:n
-       
         for c in 1:n
             if abs(r - c) < bandwidth
                 print("R", r)
@@ -92,7 +87,7 @@ function is_banded(A, threshold)
             end
         end
     end
-    
+
     # If there are any non-zero entries outside the band, it's not banded
     return non_band_nonzeros == 0
 end
@@ -127,16 +122,16 @@ function sparsestructure(A::SparseMatrixCSC, threshold)::Any
     toeplitz = is_toeplitz(A)
 
     n = size(A, 1)
-    
+
     if toeplitz
         first_row = A[1, :]
         first_col = A[:, 1]
         return Toeplitz(first_col, first_row)
     end
-    
-    if sym 
+
+    if sym
         return Symmetric(A)
-    end 
+    end
 
     if herm
         return Hermitian(A)
@@ -158,5 +153,3 @@ function sparsestructure(A::SparseMatrixCSC, threshold)::Any
 end
 
 end
-
-
