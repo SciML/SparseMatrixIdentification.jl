@@ -10,12 +10,11 @@ function check_diagonal(A, i, j)
     N = size(A, 1)
     M = size(A, 2)
 
-    num = A[i, j]
+    @inbounds num = A[i, j]
     i += 1
     j += 1
 
-
-    while i <= N && j <= M
+    @inbounds while i <= N && j <= M
         if A[i, j] != num
             return false
         end
@@ -55,19 +54,15 @@ end
 function compute_bandedness(A, bandwidth)
 
     if bandwidth == 0
-        return 100
+        return 100.0
     end
 
     n = size(A, 1)
     total_band_positions = 0
     non_zero_in_band = 0
-    bandwidth = bandwidth
-    for r = 1:n
-
+    @inbounds for r = 1:n
         for c = 1:n
             if abs(r - c) < bandwidth
-                print("R", r)
-                print("C", c)
                 total_band_positions += 1  # This position belongs to the band
                 if A[r, c] != 0
                     non_zero_in_band += 1  # This element is non-zero in the band
@@ -84,17 +79,16 @@ function is_banded(A, threshold)
     n = size(A, 1)  # assuming A is square
     bandwidth = n * threshold
     # Count the number of non-zero entries outside the band
-    non_band_nonzeros = 0
-    for r = 1:n
+    @inbounds for r = 1:n
         for c = 1:n
             if abs(r - c) >= bandwidth && A[r, c] != 0
-                non_band_nonzeros += 1
+                return false
             end
         end
     end
 
     # If there are any non-zero entries outside the band, it's not banded
-    return non_band_nonzeros == 0
+    return true
 end
 
 # compute the sparsity for a given matrix
@@ -117,7 +111,7 @@ end
 export sparsestructure
 
 # return the best type of matrix for a given sparse matrix
-function sparsestructure(A::SparseMatrixCSC, threshold)::Any
+function sparsestructure(A::SparseMatrixCSC, threshold)
     sym = issymmetric(A)
     herm = ishermitian(A)
     banded = is_banded(A, threshold)
