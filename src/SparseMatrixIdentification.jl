@@ -107,7 +107,7 @@ end
 export getstructure
 
 # get the percentage banded for a bandwidth of 1 and percentage sparsity
-function getstructure(A::Matrix)::Any
+function getstructure(A::AbstractMatrix)::Any
     percentage_banded = compute_bandedness(A, 1)
     percentage_sparsity = compute_sparsity(SparseMatrixCSC(A))
 
