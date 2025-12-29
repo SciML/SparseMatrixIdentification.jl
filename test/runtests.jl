@@ -190,3 +190,10 @@ end
     sparse_T = SparseMatrixCSC(T)
     @test sparsestructure(sparse_T, 1/3) isa Toeplitz
 end
+
+# Allocation tests - run in "nopre" group to avoid precompilation issues
+if get(ENV, "GROUP", "all") == "all" || get(ENV, "GROUP", "all") == "nopre"
+    @testset "Allocation Tests" begin
+        include("alloc_tests.jl")
+    end
+end
