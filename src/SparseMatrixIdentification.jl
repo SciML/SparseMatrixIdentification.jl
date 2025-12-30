@@ -1,12 +1,6 @@
 module SparseMatrixIdentification
 using LinearAlgebra
 using SparseArrays
-using BandedMatrices
-using ToeplitzMatrices
-using BlockBandedMatrices
-using SpecialMatrices
-using SemiseparableMatrices
-using FastAlmostBandedMatrices
 
 # check the diagonal of a given matrix, helper for is_toeplitz
 function check_diagonal(A, i, j)
@@ -350,6 +344,64 @@ end
 
 export sparsestructure
 
+# Extension point functions - extensions define these using multiple dispatch
+# The base module does NOT define fallback methods; instead sparsestructure
+# checks if methods exist before calling them.
+
+# Placeholder types for dispatch - extensions will add methods for these
+abstract type SpecialMatricesExtTrait end
+abstract type ToeplitzMatricesExtTrait end
+abstract type BandedMatricesExtTrait end
+abstract type BlockBandedMatricesExtTrait end
+abstract type FastAlmostBandedMatricesExtTrait end
+
+# Extension flags - set to true when extensions are loaded
+const _specialmatrices_loaded = Ref(false)
+const _toeplitzmatrices_loaded = Ref(false)
+const _bandedmatrices_loaded = Ref(false)
+const _blockbandedmatrices_loaded = Ref(false)
+const _fastalmostbandedmatrices_loaded = Ref(false)
+
+"""
+    try_special_matrices(Ad, n, m)
+
+Extension point for SpecialMatrices.jl. Returns nothing when SpecialMatrices is not loaded.
+When SpecialMatrices is loaded, returns Hilbert, Strang, Vandermonde, or Cauchy if detected.
+"""
+function try_special_matrices end
+
+"""
+    try_toeplitz(A)
+
+Extension point for ToeplitzMatrices.jl. Returns nothing when ToeplitzMatrices is not loaded.
+When ToeplitzMatrices is loaded, returns Toeplitz if detected.
+"""
+function try_toeplitz end
+
+"""
+    try_blockbanded(Ad, n)
+
+Extension point for BlockBandedMatrices.jl. Returns nothing when BlockBandedMatrices is not loaded.
+When BlockBandedMatrices is loaded, returns BlockBandedMatrix if detected.
+"""
+function try_blockbanded end
+
+"""
+    try_almostbanded(Ad, n)
+
+Extension point for FastAlmostBandedMatrices.jl. Returns nothing when FastAlmostBandedMatrices is not loaded.
+When FastAlmostBandedMatrices is loaded, returns AlmostBandedMatrix if detected.
+"""
+function try_almostbanded end
+
+"""
+    try_banded(A, threshold)
+
+Extension point for BandedMatrices.jl. Returns nothing when BandedMatrices is not loaded.
+When BandedMatrices is loaded, returns BandedMatrix if detected.
+"""
+function try_banded end
+
 """
     sparsestructure(A::SparseMatrixCSC, threshold)
 
@@ -361,24 +413,33 @@ order: Hilbert, Strang, Vandermonde, Cauchy (from SpecialMatrices), Toeplitz, Sy
 Hermitian, Lower Triangular, Upper Triangular, BlockBandedMatrix, AlmostBandedMatrix,
 BandedMatrix, and falls back to SparseMatrixCSC if no special structure is detected.
 
+Note: Specialized matrix types (Hilbert, Strang, Vandermonde, Cauchy, Toeplitz,
+BlockBandedMatrix, AlmostBandedMatrix, BandedMatrix) are only returned if the
+corresponding package is loaded. Load the relevant package to enable detection:
+- `using SpecialMatrices` for Hilbert, Strang, Vandermonde, Cauchy
+- `using ToeplitzMatrices` for Toeplitz
+- `using BandedMatrices` for BandedMatrix
+- `using BlockBandedMatrices` for BlockBandedMatrix
+- `using FastAlmostBandedMatrices` for AlmostBandedMatrix
+
 # Arguments
 - `A::SparseMatrixCSC`: The sparse matrix to analyze
 - `threshold`: Bandwidth threshold as a fraction of matrix size for banded detection
 
 # Returns
 One of the following matrix types based on detected structure:
-- `Hilbert`: If A[i,j] = 1/(i+j-1)
-- `Strang`: If the matrix is tridiagonal Toeplitz with pattern [2, -1, -1]
-- `Vandermonde`: If columns are powers of a base vector
-- `Cauchy`: If A[i,j] = 1/(x[i] + y[j])
-- `Toeplitz`: If the matrix has constant diagonals
+- `Hilbert`: If A[i,j] = 1/(i+j-1) (requires SpecialMatrices)
+- `Strang`: If the matrix is tridiagonal Toeplitz with pattern [2, -1, -1] (requires SpecialMatrices)
+- `Vandermonde`: If columns are powers of a base vector (requires SpecialMatrices)
+- `Cauchy`: If A[i,j] = 1/(x[i] + y[j]) (requires SpecialMatrices)
+- `Toeplitz`: If the matrix has constant diagonals (requires ToeplitzMatrices)
 - `Symmetric`: If the matrix is symmetric
 - `Hermitian`: If the matrix is Hermitian (complex conjugate symmetric)
 - `LowerTriangular`: If all elements above the diagonal are zero
 - `UpperTriangular`: If all elements below the diagonal are zero
-- `BlockBandedMatrix`: If the matrix has block-banded structure
-- `AlmostBandedMatrix`: If the matrix is banded plus low-rank fill
-- `BandedMatrix`: If non-zeros are confined within a band around the diagonal
+- `BlockBandedMatrix`: If the matrix has block-banded structure (requires BlockBandedMatrices)
+- `AlmostBandedMatrix`: If the matrix is banded plus low-rank fill (requires FastAlmostBandedMatrices)
+- `BandedMatrix`: If non-zeros are confined within a band around the diagonal (requires BandedMatrices)
 - `SparseMatrixCSC`: If no special structure is detected
 
 # Examples
@@ -398,40 +459,20 @@ function sparsestructure(A::SparseMatrixCSC, threshold)
     # Convert to dense for structure detection (needed for special matrices)
     Ad = Matrix(A)
 
-    # Check for SpecialMatrices types first (Issue #3)
-    if is_hilbert(Ad)
-        return Hilbert(n)
-    end
-
-    if is_strang(Ad)
-        return Strang(n)
-    end
-
-    if is_vandermonde(Ad)
-        x = Ad[:, 2]  # Extract base values from second column
-        return Vandermonde(x)
-    end
-
-    if is_cauchy(Ad)
-        # Extract x and y vectors for Cauchy matrix construction
-        y1 = 1.0 / Ad[1, 1]
-        x = zeros(Float64, n)
-        y = zeros(Float64, m)
-        y[1] = y1
-        for i in 2:n
-            x[i] = 1.0 / Ad[i, 1] - y[1]
+    # Check for SpecialMatrices types first (requires SpecialMatrices extension)
+    if _specialmatrices_loaded[]
+        result = try_special_matrices(Ad, n, m)
+        if result !== nothing
+            return result
         end
-        for j in 2:m
-            y[j] = 1.0 / Ad[1, j] - x[1]
-        end
-        return Cauchy(x, y)
     end
 
-    # Check for Toeplitz
-    if is_toeplitz(A)
-        first_row = A[1, :]
-        first_col = A[:, 1]
-        return Toeplitz(first_col, first_row)
+    # Check for Toeplitz (requires ToeplitzMatrices extension)
+    if _toeplitzmatrices_loaded[]
+        result = try_toeplitz(A)
+        if result !== nothing
+            return result
+        end
     end
 
     # Check standard LinearAlgebra properties
@@ -456,39 +497,28 @@ function sparsestructure(A::SparseMatrixCSC, threshold)
         return UpperTriangular(A)
     end
 
-    # Check for BlockBandedMatrix (Issue #2)
-    blocksize = detect_block_size(Ad)
-    if blocksize > 0
-        nblocks = n ÷ blocksize
-        # Create BlockBandedMatrix with detected block structure
-        return BlockBandedMatrix{eltype(A)}(Ad, fill(blocksize, nblocks),
-            fill(blocksize, nblocks), (1, 1))
-    end
-
-    # Check for AlmostBandedMatrix (Issue #4, #5)
-    # Try different bandwidths
-    for bw in 1:min(5, n ÷ 2)
-        is_ab, bandwidth, rank = is_almost_banded(Ad, bw)
-        if is_ab
-            # Create AlmostBandedMatrix from FastAlmostBandedMatrices
-            # Extract banded part
-            banded_part = zeros(eltype(A), n, n)
-            for j in 1:n
-                for i in max(1, j - bw):min(n, j + bw)
-                    banded_part[i, j] = Ad[i, j]
-                end
-            end
-            B = BandedMatrix(banded_part, (bw, bw))
-            # For now, return the banded part as the structure is detected
-            # Full AlmostBandedMatrix construction requires more complex setup
-            return FastAlmostBandedMatrices.AlmostBandedMatrix(B, zeros(eltype(A), n, rank))
+    # Check for BlockBandedMatrix (requires BlockBandedMatrices extension)
+    if _blockbandedmatrices_loaded[]
+        result = try_blockbanded(Ad, n)
+        if result !== nothing
+            return result
         end
     end
 
-    # Check for regular banded
-    banded = is_banded(A, threshold)
-    if banded
-        return BandedMatrix(A)
+    # Check for AlmostBandedMatrix (requires FastAlmostBandedMatrices extension)
+    if _fastalmostbandedmatrices_loaded[]
+        result = try_almostbanded(Ad, n)
+        if result !== nothing
+            return result
+        end
+    end
+
+    # Check for regular banded (requires BandedMatrices extension)
+    if _bandedmatrices_loaded[]
+        result = try_banded(A, threshold)
+        if result !== nothing
+            return result
+        end
     end
 
     return SparseMatrixCSC(A)
