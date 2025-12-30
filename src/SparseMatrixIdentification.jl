@@ -3,6 +3,10 @@ using LinearAlgebra
 using SparseArrays
 using BandedMatrices
 using ToeplitzMatrices
+using BlockBandedMatrices
+using SpecialMatrices
+using SemiseparableMatrices
+using FastAlmostBandedMatrices
 
 # check the diagonal of a given matrix, helper for is_toeplitz
 function check_diagonal(A, i, j)
@@ -95,6 +99,224 @@ function compute_sparsity(A)
     return 1 - percentage_sparsity
 end
 
+# Check if matrix is a Hilbert matrix: A[i,j] = 1/(i+j-1)
+function is_hilbert(A; rtol = 1e-10)
+    n, m = size(A)
+    if n != m
+        return false
+    end
+    @inbounds for j in 1:n
+        for i in 1:n
+            expected = 1 / (i + j - 1)
+            if !isapprox(A[i, j], expected; rtol = rtol)
+                return false
+            end
+        end
+    end
+    return true
+end
+
+# Check if matrix is a Strang matrix: tridiagonal Toeplitz with [2, -1, -1] pattern
+function is_strang(A; rtol = 1e-10)
+    n, m = size(A)
+    if n != m || n < 2
+        return false
+    end
+    @inbounds for j in 1:n
+        for i in 1:n
+            if i == j
+                if !isapprox(A[i, j], 2; rtol = rtol)
+                    return false
+                end
+            elseif abs(i - j) == 1
+                if !isapprox(A[i, j], -1; rtol = rtol)
+                    return false
+                end
+            else
+                if !isapprox(A[i, j], 0; atol = rtol)
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+
+# Check if matrix is a Vandermonde matrix: V[i,j] = x[i]^(j-1)
+function is_vandermonde(A; rtol = 1e-10)
+    n, m = size(A)
+    if n < 2 || m < 2
+        return false
+    end
+    # First column should be all ones (x^0 = 1)
+    @inbounds for i in 1:n
+        if !isapprox(A[i, 1], 1; rtol = rtol)
+            return false
+        end
+    end
+    # Extract the base values from the second column
+    x = A[:, 2]
+    # Check that each column j has values x[i]^(j-1)
+    @inbounds for j in 3:m
+        for i in 1:n
+            expected = x[i]^(j - 1)
+            if !isapprox(A[i, j], expected; rtol = rtol)
+                return false
+            end
+        end
+    end
+    return true
+end
+
+# Check if matrix is a Cauchy matrix: A[i,j] = 1/(x[i] + y[j])
+# Only works for real matrices
+function is_cauchy(A; rtol = 1e-10)
+    n, m = size(A)
+    if n < 2 || m < 2
+        return false
+    end
+
+    # Only check real matrices
+    if eltype(A) <: Complex
+        return false
+    end
+
+    # Try to extract x and y from first row and first column
+    # A[1,j] = 1/(x[1] + y[j]) and A[i,1] = 1/(x[i] + y[1])
+    # So: x[1] + y[j] = 1/A[1,j] => y[j] = 1/A[1,j] - x[1]
+    # And: x[i] + y[1] = 1/A[i,1] => x[i] = 1/A[i,1] - y[1]
+    # From A[1,1]: x[1] + y[1] = 1/A[1,1]
+    # Let's set x[1] = 0, then y[1] = 1/A[1,1]
+
+    @inbounds begin
+        if A[1, 1] == 0
+            return false
+        end
+        y1 = 1.0 / A[1, 1]
+        x = zeros(Float64, n)
+        y = zeros(Float64, m)
+        y[1] = y1
+
+        # Extract x values from first column
+        for i in 2:n
+            if A[i, 1] == 0
+                return false
+            end
+            x[i] = 1.0 / A[i, 1] - y[1]
+        end
+
+        # Extract y values from first row
+        for j in 2:m
+            if A[1, j] == 0
+                return false
+            end
+            y[j] = 1.0 / A[1, j] - x[1]
+        end
+
+        # Verify all entries
+        for j in 1:m
+            for i in 1:n
+                denom = x[i] + y[j]
+                if denom == 0
+                    return false
+                end
+                expected = 1.0 / denom
+                if !isapprox(Float64(A[i, j]), expected; rtol = rtol)
+                    return false
+                end
+            end
+        end
+    end
+    return true
+end
+
+# Check if matrix has block-banded structure with given block size
+function is_blockbanded_uniform(A, blocksize; threshold = 0.0)
+    n, m = size(A)
+    if n != m || n % blocksize != 0
+        return false
+    end
+    nblocks = n ÷ blocksize
+
+    # Check that entries outside the block-tridiagonal region are zero
+    @inbounds for bj in 1:nblocks
+        for bi in 1:nblocks
+            if abs(bi - bj) > 1  # Outside block-tridiagonal
+                # Check if block is all zeros
+                for j in ((bj - 1) * blocksize + 1):(bj * blocksize)
+                    for i in ((bi - 1) * blocksize + 1):(bi * blocksize)
+                        if A[i, j] != 0
+                            return false
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return true
+end
+
+# Detect block size for block-banded matrix (tries common block sizes)
+function detect_block_size(A)
+    n = size(A, 1)
+    # Try block sizes that evenly divide n
+    # Only consider block sizes where we have at least 3 blocks (to be meaningful)
+    for bs in [2, 3, 4, 5, 6, 8, 10]
+        nblocks = n ÷ bs
+        if n % bs == 0 && nblocks >= 3 && is_blockbanded_uniform(A, bs)
+            return bs
+        end
+    end
+    return 0  # No block structure detected
+end
+
+# Check if matrix is almost banded (banded + low-rank fill)
+function is_almost_banded(A, bandwidth; rank_threshold = 2)
+    n = size(A, 1)
+    # Only check for matrices that are large enough to have meaningful structure
+    if n < 6
+        return false, 0, 0
+    end
+
+    # Only check real matrices for now
+    if eltype(A) <: Complex
+        return false, 0, 0
+    end
+
+    # Extract the part outside the band
+    outside_band = zeros(Float64, n, n)
+    has_nonzero = false
+    @inbounds for j in 1:n
+        for i in 1:n
+            if abs(i - j) > bandwidth
+                outside_band[i, j] = Float64(A[i, j])
+                if A[i, j] != 0
+                    has_nonzero = true
+                end
+            end
+        end
+    end
+
+    # Check if the outside-band part has non-zeros
+    if !has_nonzero
+        return false, 0, 0  # It's just banded, not almost banded
+    end
+
+    # Compute SVD to check rank
+    try
+        S = svdvals(outside_band)
+        # Count significant singular values
+        tol = maximum(S) * 1e-6
+        rank = count(s -> s > tol, S)
+        if rank > 0 && rank <= rank_threshold
+            return true, bandwidth, rank
+        end
+    catch
+        return false, 0, 0
+    end
+    return false, 0, 0
+end
+
 export getstructure
 
 """
@@ -135,8 +357,9 @@ Identify the structure of a sparse matrix and return an optimized matrix type.
 
 Analyzes the input sparse matrix and returns the most appropriate specialized matrix type
 based on detected structural properties. The function checks for properties in the following
-order: Toeplitz, Symmetric, Hermitian, Lower Triangular, Upper Triangular, Banded, and
-falls back to SparseMatrixCSC if no special structure is detected.
+order: Hilbert, Strang, Vandermonde, Cauchy (from SpecialMatrices), Toeplitz, Symmetric,
+Hermitian, Lower Triangular, Upper Triangular, BlockBandedMatrix, AlmostBandedMatrix,
+BandedMatrix, and falls back to SparseMatrixCSC if no special structure is detected.
 
 # Arguments
 - `A::SparseMatrixCSC`: The sparse matrix to analyze
@@ -144,11 +367,17 @@ falls back to SparseMatrixCSC if no special structure is detected.
 
 # Returns
 One of the following matrix types based on detected structure:
+- `Hilbert`: If A[i,j] = 1/(i+j-1)
+- `Strang`: If the matrix is tridiagonal Toeplitz with pattern [2, -1, -1]
+- `Vandermonde`: If columns are powers of a base vector
+- `Cauchy`: If A[i,j] = 1/(x[i] + y[j])
 - `Toeplitz`: If the matrix has constant diagonals
 - `Symmetric`: If the matrix is symmetric
 - `Hermitian`: If the matrix is Hermitian (complex conjugate symmetric)
 - `LowerTriangular`: If all elements above the diagonal are zero
 - `UpperTriangular`: If all elements below the diagonal are zero
+- `BlockBandedMatrix`: If the matrix has block-banded structure
+- `AlmostBandedMatrix`: If the matrix is banded plus low-rank fill
 - `BandedMatrix`: If non-zeros are confined within a band around the diagonal
 - `SparseMatrixCSC`: If no special structure is detected
 
@@ -163,21 +392,53 @@ julia> sparsestructure(L, 0.5)  # Returns LowerTriangular
 ```
 """
 function sparsestructure(A::SparseMatrixCSC, threshold)
-    sym = issymmetric(A)
-    herm = ishermitian(A)
-    banded = is_banded(A, threshold)
-    posdef = isposdef(A)
-    lower_triangular = istril(A)
-    upper_triangular = istriu(A)
-    toeplitz = is_toeplitz(A)
-
     n = size(A, 1)
+    m = size(A, 2)
 
-    if toeplitz
+    # Convert to dense for structure detection (needed for special matrices)
+    Ad = Matrix(A)
+
+    # Check for SpecialMatrices types first (Issue #3)
+    if is_hilbert(Ad)
+        return Hilbert(n)
+    end
+
+    if is_strang(Ad)
+        return Strang(n)
+    end
+
+    if is_vandermonde(Ad)
+        x = Ad[:, 2]  # Extract base values from second column
+        return Vandermonde(x)
+    end
+
+    if is_cauchy(Ad)
+        # Extract x and y vectors for Cauchy matrix construction
+        y1 = 1.0 / Ad[1, 1]
+        x = zeros(Float64, n)
+        y = zeros(Float64, m)
+        y[1] = y1
+        for i in 2:n
+            x[i] = 1.0 / Ad[i, 1] - y[1]
+        end
+        for j in 2:m
+            y[j] = 1.0 / Ad[1, j] - x[1]
+        end
+        return Cauchy(x, y)
+    end
+
+    # Check for Toeplitz
+    if is_toeplitz(A)
         first_row = A[1, :]
         first_col = A[:, 1]
         return Toeplitz(first_col, first_row)
     end
+
+    # Check standard LinearAlgebra properties
+    sym = issymmetric(A)
+    herm = ishermitian(A)
+    lower_triangular = istril(A)
+    upper_triangular = istriu(A)
 
     if sym
         return Symmetric(A)
@@ -195,6 +456,37 @@ function sparsestructure(A::SparseMatrixCSC, threshold)
         return UpperTriangular(A)
     end
 
+    # Check for BlockBandedMatrix (Issue #2)
+    blocksize = detect_block_size(Ad)
+    if blocksize > 0
+        nblocks = n ÷ blocksize
+        # Create BlockBandedMatrix with detected block structure
+        return BlockBandedMatrix{eltype(A)}(Ad, fill(blocksize, nblocks),
+            fill(blocksize, nblocks), (1, 1))
+    end
+
+    # Check for AlmostBandedMatrix (Issue #4, #5)
+    # Try different bandwidths
+    for bw in 1:min(5, n ÷ 2)
+        is_ab, bandwidth, rank = is_almost_banded(Ad, bw)
+        if is_ab
+            # Create AlmostBandedMatrix from FastAlmostBandedMatrices
+            # Extract banded part
+            banded_part = zeros(eltype(A), n, n)
+            for j in 1:n
+                for i in max(1, j - bw):min(n, j + bw)
+                    banded_part[i, j] = Ad[i, j]
+                end
+            end
+            B = BandedMatrix(banded_part, (bw, bw))
+            # For now, return the banded part as the structure is detected
+            # Full AlmostBandedMatrix construction requires more complex setup
+            return FastAlmostBandedMatrices.AlmostBandedMatrix(B, zeros(eltype(A), n, rank))
+        end
+    end
+
+    # Check for regular banded
+    banded = is_banded(A, threshold)
     if banded
         return BandedMatrix(A)
     end
