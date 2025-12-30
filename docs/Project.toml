@@ -1,0 +1,6 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+SparseMatrixIdentification = "2607229e-3272-44a7-bc4a-cd97a328dfbf"
+
+[compat]
+Documenter = "1"
