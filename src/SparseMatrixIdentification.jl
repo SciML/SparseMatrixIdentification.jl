@@ -1,9 +1,19 @@
 module SparseMatrixIdentification
 using LinearAlgebra
 using SparseArrays
+using ArrayInterface
+
+# Helper function to check if an array supports fast scalar indexing
+function _require_fast_scalar_indexing(A, funcname)
+    if !ArrayInterface.fast_scalar_indexing(A)
+        throw(ArgumentError("$funcname requires arrays with fast scalar indexing. " *
+                            "GPU arrays are not supported for this operation."))
+    end
+end
 
 # check the diagonal of a given matrix, helper for is_toeplitz
 function check_diagonal(A, i, j)
+    _require_fast_scalar_indexing(A, "check_diagonal")
     N = size(A, 1)
     M = size(A, 2)
 
@@ -23,6 +33,7 @@ end
 
 # check if toeplitz matrix
 function is_toeplitz(mat)
+    _require_fast_scalar_indexing(mat, "is_toeplitz")
     N = size(mat, 1)
 
     if N == 1
@@ -48,6 +59,8 @@ end
 
 # compute the percentage banded for a matrix given a bandwidth
 function compute_bandedness(A, bandwidth)
+    _require_fast_scalar_indexing(A, "compute_bandedness")
+
     if bandwidth == 0
         return 100.0
     end
@@ -71,6 +84,7 @@ function compute_bandedness(A, bandwidth)
 end
 
 function is_banded(A, threshold)
+    _require_fast_scalar_indexing(A, "is_banded")
     n = size(A, 1)  # assuming A is square
     bandwidth = n * threshold
     # Count the number of non-zero entries outside the band
@@ -95,6 +109,7 @@ end
 
 # Check if matrix is a Hilbert matrix: A[i,j] = 1/(i+j-1)
 function is_hilbert(A; rtol = 1e-10)
+    _require_fast_scalar_indexing(A, "is_hilbert")
     n, m = size(A)
     if n != m
         return false
@@ -112,6 +127,7 @@ end
 
 # Check if matrix is a Strang matrix: tridiagonal Toeplitz with [2, -1, -1] pattern
 function is_strang(A; rtol = 1e-10)
+    _require_fast_scalar_indexing(A, "is_strang")
     n, m = size(A)
     if n != m || n < 2
         return false
@@ -138,6 +154,7 @@ end
 
 # Check if matrix is a Vandermonde matrix: V[i,j] = x[i]^(j-1)
 function is_vandermonde(A; rtol = 1e-10)
+    _require_fast_scalar_indexing(A, "is_vandermonde")
     n, m = size(A)
     if n < 2 || m < 2
         return false
@@ -165,6 +182,7 @@ end
 # Check if matrix is a Cauchy matrix: A[i,j] = 1/(x[i] + y[j])
 # Only works for real matrices
 function is_cauchy(A; rtol = 1e-10)
+    _require_fast_scalar_indexing(A, "is_cauchy")
     n, m = size(A)
     if n < 2 || m < 2
         return false
@@ -226,6 +244,7 @@ end
 
 # Check if matrix has block-banded structure with given block size
 function is_blockbanded_uniform(A, blocksize; threshold = 0.0)
+    _require_fast_scalar_indexing(A, "is_blockbanded_uniform")
     n, m = size(A)
     if n != m || n % blocksize != 0
         return false
@@ -266,6 +285,7 @@ end
 
 # Check if matrix is almost banded (banded + low-rank fill)
 function is_almost_banded(A, bandwidth; rank_threshold = 2)
+    _require_fast_scalar_indexing(A, "is_almost_banded")
     n = size(A, 1)
     # Only check for matrices that are large enough to have meaningful structure
     if n < 6
@@ -336,6 +356,7 @@ julia> getstructure(A)
 ```
 """
 function getstructure(A::AbstractMatrix)::Any
+    _require_fast_scalar_indexing(A, "getstructure")
     percentage_banded = compute_bandedness(A, 1)
     percentage_sparsity = compute_sparsity(SparseMatrixCSC(A))
 
@@ -403,7 +424,7 @@ When BandedMatrices is loaded, returns BandedMatrix if detected.
 function try_banded end
 
 """
-    sparsestructure(A::SparseMatrixCSC, threshold)
+    sparsestructure(A::AbstractSparseMatrix, threshold)
 
 Identify the structure of a sparse matrix and return an optimized matrix type.
 
@@ -423,7 +444,7 @@ corresponding package is loaded. Load the relevant package to enable detection:
 - `using FastAlmostBandedMatrices` for AlmostBandedMatrix
 
 # Arguments
-- `A::SparseMatrixCSC`: The sparse matrix to analyze
+- `A::AbstractSparseMatrix`: The sparse matrix to analyze
 - `threshold`: Bandwidth threshold as a fraction of matrix size for banded detection
 
 # Returns
@@ -452,7 +473,8 @@ julia> L = sparse([1 0 0; 2 3 0; 4 5 6])
 julia> sparsestructure(L, 0.5)  # Returns LowerTriangular
 ```
 """
-function sparsestructure(A::SparseMatrixCSC, threshold)
+function sparsestructure(A::AbstractSparseMatrix, threshold)
+    _require_fast_scalar_indexing(A, "sparsestructure")
     n = size(A, 1)
     m = size(A, 2)
 
