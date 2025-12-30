@@ -4,14 +4,23 @@ version = "1.0.0-DEV"
 authors = ["Anastasia Dunca"]
 
 [deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[weakdeps]
 BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 FastAlmostBandedMatrices = "9d29842c-ecb8-4973-b1e9-a27b1157504e"
-LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SemiseparableMatrices = "f8ebbe35-cbfb-4060-bf7f-b10e4670cf57"
-SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialMatrices = "928aab9d-ef52-54ac-8ca1-acd7ca42c160"
 ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
+
+[extensions]
+BandedMatricesExt = "BandedMatrices"
+BlockBandedMatricesExt = ["BlockBandedMatrices", "BandedMatrices"]
+FastAlmostBandedMatricesExt = ["FastAlmostBandedMatrices", "BandedMatrices"]
+SpecialMatricesExt = "SpecialMatrices"
+ToeplitzMatricesExt = "ToeplitzMatrices"
 
 [compat]
 BandedMatrices = "1.10.2"
@@ -20,12 +29,17 @@ FastAlmostBandedMatrices = "0.1.5"
 SemiseparableMatrices = "0.4.0"
 SpecialMatrices = "3.1.0"
 ToeplitzMatrices = "0.8.5"
-julia = "1.6.7"
+julia = "1.9"
 
 [extras]
 AllocCheck = "9b6a8646-10ed-4001-bbdc-1d2f46dfbb1a"
+BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+FastAlmostBandedMatrices = "9d29842c-ecb8-4973-b1e9-a27b1157504e"
+SpecialMatrices = "928aab9d-ef52-54ac-8ca1-acd7ca42c160"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [targets]
-test = ["AllocCheck", "BenchmarkTools", "Test"]
+test = ["AllocCheck", "BandedMatrices", "BenchmarkTools", "BlockBandedMatrices", "FastAlmostBandedMatrices", "SpecialMatrices", "Test", "ToeplitzMatrices"]
