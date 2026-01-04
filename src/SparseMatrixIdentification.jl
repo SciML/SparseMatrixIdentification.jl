@@ -5,9 +5,13 @@ using ArrayInterface
 
 # Helper function to check if an array supports fast scalar indexing
 function _require_fast_scalar_indexing(A, funcname)
-    if !ArrayInterface.fast_scalar_indexing(A)
-        throw(ArgumentError("$funcname requires arrays with fast scalar indexing. " *
-                            "GPU arrays are not supported for this operation."))
+    return if !ArrayInterface.fast_scalar_indexing(A)
+        throw(
+            ArgumentError(
+                "$funcname requires arrays with fast scalar indexing. " *
+                    "GPU arrays are not supported for this operation."
+            )
+        )
     end
 end
 
@@ -108,7 +112,7 @@ function compute_sparsity(A)
 end
 
 # Check if matrix is a Hilbert matrix: A[i,j] = 1/(i+j-1)
-function is_hilbert(A; rtol = 1e-10)
+function is_hilbert(A; rtol = 1.0e-10)
     _require_fast_scalar_indexing(A, "is_hilbert")
     n, m = size(A)
     if n != m
@@ -126,7 +130,7 @@ function is_hilbert(A; rtol = 1e-10)
 end
 
 # Check if matrix is a Strang matrix: tridiagonal Toeplitz with [2, -1, -1] pattern
-function is_strang(A; rtol = 1e-10)
+function is_strang(A; rtol = 1.0e-10)
     _require_fast_scalar_indexing(A, "is_strang")
     n, m = size(A)
     if n != m || n < 2
@@ -153,7 +157,7 @@ function is_strang(A; rtol = 1e-10)
 end
 
 # Check if matrix is a Vandermonde matrix: V[i,j] = x[i]^(j-1)
-function is_vandermonde(A; rtol = 1e-10)
+function is_vandermonde(A; rtol = 1.0e-10)
     _require_fast_scalar_indexing(A, "is_vandermonde")
     n, m = size(A)
     if n < 2 || m < 2
@@ -181,7 +185,7 @@ end
 
 # Check if matrix is a Cauchy matrix: A[i,j] = 1/(x[i] + y[j])
 # Only works for real matrices
-function is_cauchy(A; rtol = 1e-10)
+function is_cauchy(A; rtol = 1.0e-10)
     _require_fast_scalar_indexing(A, "is_cauchy")
     n, m = size(A)
     if n < 2 || m < 2
@@ -320,7 +324,7 @@ function is_almost_banded(A, bandwidth; rank_threshold = 2)
     try
         S = svdvals(outside_band)
         # Count significant singular values
-        tol = maximum(S) * 1e-6
+        tol = maximum(S) * 1.0e-6
         rank = count(s -> s > tol, S)
         if rank > 0 && rank <= rank_threshold
             return true, bandwidth, rank

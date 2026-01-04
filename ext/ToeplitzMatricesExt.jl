@@ -4,7 +4,7 @@ using SparseMatrixIdentification
 using ToeplitzMatrices
 
 function __init__()
-    SparseMatrixIdentification._toeplitzmatrices_loaded[] = true
+    return SparseMatrixIdentification._toeplitzmatrices_loaded[] = true
 end
 
 function SparseMatrixIdentification.try_toeplitz(A)

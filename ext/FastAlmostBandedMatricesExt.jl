@@ -5,7 +5,7 @@ using FastAlmostBandedMatrices
 using BandedMatrices
 
 function __init__()
-    SparseMatrixIdentification._fastalmostbandedmatrices_loaded[] = true
+    return SparseMatrixIdentification._fastalmostbandedmatrices_loaded[] = true
 end
 
 function SparseMatrixIdentification.try_almostbanded(Ad, n)
