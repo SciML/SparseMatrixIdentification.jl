@@ -4,7 +4,7 @@ using SparseMatrixIdentification
 using SpecialMatrices
 
 function __init__()
-    SparseMatrixIdentification._specialmatrices_loaded[] = true
+    return SparseMatrixIdentification._specialmatrices_loaded[] = true
 end
 
 function SparseMatrixIdentification.try_special_matrices(Ad, n, m)
