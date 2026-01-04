@@ -4,7 +4,7 @@ using SparseMatrixIdentification
 using BandedMatrices
 
 function __init__()
-    SparseMatrixIdentification._bandedmatrices_loaded[] = true
+    return SparseMatrixIdentification._bandedmatrices_loaded[] = true
 end
 
 function SparseMatrixIdentification.try_banded(A, threshold)
