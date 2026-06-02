@@ -1,0 +1,4 @@
+[default.extend-words]
+# "Strang" is the name of a matrix type (Strang matrix), not a typo for "Strange".
+Strang = "Strang"
+strang = "strang"
