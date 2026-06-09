@@ -1,5 +1,17 @@
-using SparseMatrixIdentification
 using Test
+
+const GROUP = get(ENV, "GROUP", "All")
+
+if GROUP == "QA"
+    using Pkg
+    Pkg.activate(joinpath(@__DIR__, "qa"))
+    Pkg.instantiate()
+    include(joinpath(@__DIR__, "qa", "qa.jl"))
+end
+
+if GROUP == "All" || GROUP == "Core"
+
+using SparseMatrixIdentification
 using LinearAlgebra
 using SparseArrays
 using BandedMatrices
@@ -336,9 +348,8 @@ end
     end
 end
 
-# Allocation tests - run in "nopre" group to avoid precompilation issues
-if get(ENV, "GROUP", "all") == "all" || get(ENV, "GROUP", "all") == "nopre"
-    @testset "Allocation Tests" begin
-        include("alloc_tests.jl")
-    end
+@testset "Allocation Tests" begin
+    include("alloc_tests.jl")
 end
+
+end # GROUP == "All" || GROUP == "Core"
