@@ -1,4 +1,13 @@
 using Test
+using SparseMatrixIdentification
+using LinearAlgebra
+using SparseArrays
+using BandedMatrices
+using ToeplitzMatrices
+using SpecialMatrices
+using BlockBandedMatrices
+using FastAlmostBandedMatrices
+using JLArrays
 
 const GROUP = get(ENV, "GROUP", "All")
 
@@ -10,16 +19,6 @@ if GROUP == "QA"
 end
 
 if GROUP == "All" || GROUP == "Core"
-
-using SparseMatrixIdentification
-using LinearAlgebra
-using SparseArrays
-using BandedMatrices
-using ToeplitzMatrices
-using SpecialMatrices
-using BlockBandedMatrices
-using FastAlmostBandedMatrices
-using JLArrays
 
 @testset "Test check_diagonal" begin
     A = [1 2 3; 4 1 5; 6 7 1]
