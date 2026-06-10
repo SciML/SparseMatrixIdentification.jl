@@ -1,5 +1,5 @@
-using SparseMatrixIdentification
 using Test
+using SparseMatrixIdentification
 using LinearAlgebra
 using SparseArrays
 using BandedMatrices
@@ -8,6 +8,17 @@ using SpecialMatrices
 using BlockBandedMatrices
 using FastAlmostBandedMatrices
 using JLArrays
+
+const GROUP = get(ENV, "GROUP", "All")
+
+if GROUP == "QA"
+    using Pkg
+    Pkg.activate(joinpath(@__DIR__, "qa"))
+    Pkg.instantiate()
+    include(joinpath(@__DIR__, "qa", "qa.jl"))
+end
+
+if GROUP == "All" || GROUP == "Core"
 
 @testset "Test check_diagonal" begin
     A = [1 2 3; 4 1 5; 6 7 1]
@@ -336,9 +347,8 @@ end
     end
 end
 
-# Allocation tests - run in "nopre" group to avoid precompilation issues
-if get(ENV, "GROUP", "all") == "all" || get(ENV, "GROUP", "all") == "nopre"
-    @testset "Allocation Tests" begin
-        include("alloc_tests.jl")
-    end
+@testset "Allocation Tests" begin
+    include("alloc_tests.jl")
 end
+
+end # GROUP == "All" || GROUP == "Core"
