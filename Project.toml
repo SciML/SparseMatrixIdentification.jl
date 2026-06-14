@@ -31,6 +31,8 @@ BenchmarkTools = "1"
 BlockBandedMatrices = "0.13.4"
 FastAlmostBandedMatrices = "0.1.5"
 JLArrays = "0.1, 0.2, 0.3"
+SafeTestsets = "0.0.1, 0.1, 1"
+SciMLTesting = "1"
 SemiseparableMatrices = "0.4.0"
 SpecialMatrices = "3.1.0"
 Test = "1"
@@ -44,10 +46,11 @@ BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
 FastAlmostBandedMatrices = "9d29842c-ecb8-4973-b1e9-a27b1157504e"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
-Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 SpecialMatrices = "928aab9d-ef52-54ac-8ca1-acd7ca42c160"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [targets]
-test = ["AllocCheck", "BandedMatrices", "BenchmarkTools", "BlockBandedMatrices", "FastAlmostBandedMatrices", "JLArrays", "Pkg", "SpecialMatrices", "Test", "ToeplitzMatrices"]
+test = ["AllocCheck", "BandedMatrices", "BenchmarkTools", "BlockBandedMatrices", "FastAlmostBandedMatrices", "JLArrays", "SafeTestsets", "SciMLTesting", "SpecialMatrices", "Test", "ToeplitzMatrices"]
