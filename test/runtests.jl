@@ -1,13 +1,5 @@
 using Test
-using SparseMatrixIdentification
-using LinearAlgebra
-using SparseArrays
-using BandedMatrices
-using ToeplitzMatrices
-using SpecialMatrices
-using BlockBandedMatrices
-using FastAlmostBandedMatrices
-using JLArrays
+using SafeTestsets
 
 const GROUP = get(ENV, "GROUP", "All")
 
@@ -20,7 +12,10 @@ end
 
 if GROUP == "All" || GROUP == "Core"
 
-    @testset "Test check_diagonal" begin
+    @safetestset "Test check_diagonal" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using Test
         A = [1 2 3; 4 1 5; 6 7 1]
         @test SparseMatrixIdentification.check_diagonal(A, 1, 1) == true   # Diagonal starting at (1, 1) should be all 1s
         @test SparseMatrixIdentification.check_diagonal(A, 1, 2) == false  # Diagonal starting at (1, 2) should not be all 1s
@@ -48,7 +43,9 @@ if GROUP == "All" || GROUP == "Core"
         @test SparseMatrixIdentification.check_diagonal(A, 1, 1) == false  # Diagonal starting at (1, 1) should not match, as 1 != 4
     end
 
-    @testset "Test is_toeplitz" begin
+    @safetestset "Test is_toeplitz" begin
+        using SparseMatrixIdentification
+        using Test
         # Test 1: A basic Toeplitz matrix (2x2)
         mat1 = [1 2; 3 1]
         @test SparseMatrixIdentification.is_toeplitz(mat1) == true
@@ -99,7 +96,10 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for `compute_bandedness` function
-    @testset "Test compute_bandedness" begin
+    @safetestset "Test compute_bandedness" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using Test
         # Test 1: Identity Matrix
         A = Matrix(I, 3, 3)
         bandwidth = 1
@@ -122,7 +122,10 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for `is_banded` function
-    @testset "Test is_banded" begin
+    @safetestset "Test is_banded" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using Test
         # Test 1: matrix with filled elements within the band
         A = [1 2 0; 3 4 5; 0 6 7]
         @test SparseMatrixIdentification.is_banded(A, 1 / 3) == false
@@ -137,7 +140,11 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for `compute_sparsity` function
-    @testset "Test compute_sparsity" begin
+    @safetestset "Test compute_sparsity" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using SparseArrays
+        using Test
         # Test 1: Identity matrix
         A = Matrix(I, 3, 3)
         A = SparseMatrixCSC(A)
@@ -155,7 +162,10 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for `getstructure` function
-    @testset "Test getstructure" begin
+    @safetestset "Test getstructure" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using Test
         # Test 1: Band matrix
         A = [1 2 0; 3 4 5; 0 6 7]
         @test getstructure(A) == (100.0, 0.2222222222222222)
@@ -166,7 +176,13 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for `sparsestructure` function
-    @testset "Test sparsestructure" begin
+    @safetestset "Test sparsestructure" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using SparseArrays
+        using BandedMatrices
+        using ToeplitzMatrices
+        using Test
 
         # Test 1: Sparse banded matrix (banded)
         A = [1 2 0; 3 4 5; 0 6 7]
@@ -200,7 +216,11 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for SpecialMatrices detection (Issue #3)
-    @testset "Test SpecialMatrices detection" begin
+    @safetestset "Test SpecialMatrices detection" begin
+        using SparseMatrixIdentification
+        using SparseArrays
+        using SpecialMatrices
+        using Test
         # Test Hilbert matrix detection
         H = Matrix(Hilbert(4))
         @test SparseMatrixIdentification.is_hilbert(H) == true
@@ -238,7 +258,12 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for BlockBandedMatrices detection (Issue #2)
-    @testset "Test BlockBandedMatrices detection" begin
+    @safetestset "Test BlockBandedMatrices detection" begin
+        using SparseMatrixIdentification
+        using SparseArrays
+        using BandedMatrices
+        using BlockBandedMatrices
+        using Test
         # Test block-banded detection helper
         # Create a 6x6 block-tridiagonal matrix with 2x2 blocks (non-symmetric, non-triangular)
         A = zeros(6, 6)
@@ -266,7 +291,9 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Test for helper functions
-    @testset "Test helper functions" begin
+    @safetestset "Test helper functions" begin
+        using SparseMatrixIdentification
+        using Test
         # Test is_almost_banded helper function
         # Create a simple almost-banded matrix
         n = 10
@@ -292,7 +319,13 @@ if GROUP == "All" || GROUP == "Core"
     end
 
     # Interface compatibility tests
-    @testset "Interface Compatibility" begin
+    @safetestset "Interface Compatibility" begin
+        using SparseMatrixIdentification
+        using LinearAlgebra
+        using SparseArrays
+        using ToeplitzMatrices
+        using JLArrays
+        using Test
         @testset "BigFloat support" begin
             # Test that functions work with BigFloat element types
             A_bf = BigFloat[1 2 3; 4 1 2; 5 4 1]
@@ -347,7 +380,7 @@ if GROUP == "All" || GROUP == "Core"
         end
     end
 
-    @testset "Allocation Tests" begin
+    @safetestset "Allocation Tests" begin
         include("alloc_tests.jl")
     end
 

@@ -2,6 +2,7 @@ using AllocCheck
 using SparseMatrixIdentification
 using SparseArrays
 using LinearAlgebra
+using Test
 
 @testset "AllocCheck - Zero Allocations" begin
     # Test check_diagonal - critical inner function
