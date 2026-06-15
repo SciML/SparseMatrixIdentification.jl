@@ -25,7 +25,7 @@ ToeplitzMatricesExt = "ToeplitzMatrices"
 
 [compat]
 AllocCheck = "0.2"
-ArrayInterface = "7"
+ArrayInterface = "7.1"
 BandedMatrices = "1.10.2"
 BenchmarkTools = "1"
 BlockBandedMatrices = "0.13.4"
