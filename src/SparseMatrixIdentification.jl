@@ -454,7 +454,7 @@ corresponding package is loaded. Load the relevant package to enable detection:
 # Returns
 One of the following matrix types based on detected structure:
 - `Hilbert`: If A[i,j] = 1/(i+j-1) (requires SpecialMatrices)
-- `Strang`: If the matrix is tridiagonal Toeplitz with pattern [2, -1, -1] (requires SpecialMatrices)
+- `Strang`: If the matrix is tridiagonal Toeplitz with pattern `[2, -1, -1]` (requires SpecialMatrices)
 - `Vandermonde`: If columns are powers of a base vector (requires SpecialMatrices)
 - `Cauchy`: If A[i,j] = 1/(x[i] + y[j]) (requires SpecialMatrices)
 - `Toeplitz`: If the matrix has constant diagonals (requires ToeplitzMatrices)
