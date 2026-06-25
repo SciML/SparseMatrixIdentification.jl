@@ -1,7 +1,8 @@
 module SparseMatrixIdentification
-using LinearAlgebra
-using SparseArrays
-using ArrayInterface
+using LinearAlgebra: Hermitian, LowerTriangular, Symmetric, UpperTriangular,
+    ishermitian, issymmetric, istril, istriu, svdvals
+using SparseArrays: AbstractSparseMatrix, SparseMatrixCSC, nonzeros
+using ArrayInterface: ArrayInterface
 
 # Helper function to check if an array supports fast scalar indexing
 function _require_fast_scalar_indexing(A, funcname)
