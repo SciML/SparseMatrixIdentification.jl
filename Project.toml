@@ -1,6 +1,6 @@
 name = "SparseMatrixIdentification"
 uuid = "2607229e-3272-44a7-bc4a-cd97a328dfbf"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Anastasia Dunca"]
 
 [deps]
