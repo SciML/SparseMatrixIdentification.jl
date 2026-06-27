@@ -1,15 +1,12 @@
-using SparseMatrixIdentification
-using Aqua
+using SciMLTesting, SparseMatrixIdentification, Test
 using JET
-using Test
 
-@testset "Aqua" begin
-    # deps_compat is a genuine finding (missing compat for LinearAlgebra/SparseArrays
-    # deps and the Pkg extra); keep every other sub-check enabled.
-    Aqua.test_all(SparseMatrixIdentification; deps_compat = false)
-    @test_broken false  # Aqua deps_compat: missing compat for LinearAlgebra, SparseArrays, Pkg — see https://github.com/SciML/SparseMatrixIdentification.jl/issues/36
-end
-
-@testset "JET" begin
-    @test_broken false  # JET: try_* extension helpers report no-matching-method in sparsestructure(::AbstractSparseMatrix) — see https://github.com/SciML/SparseMatrixIdentification.jl/issues/36
-end
+run_qa(
+    SparseMatrixIdentification;
+    explicit_imports = true,
+    ei_kwargs = (;
+        # `fast_scalar_indexing` is not public (unexported, not declared public) in
+        # ArrayInterface; it is the only non-public name this package accesses.
+        all_qualified_accesses_are_public = (; ignore = (:fast_scalar_indexing,)),
+    ),
+)
