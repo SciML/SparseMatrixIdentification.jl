@@ -14,6 +14,21 @@ function _run_qa()
     )
 end
 
+function _qa_julia_cmd()
+    julia_args = String[]
+    skip_arg = false
+    for arg in Base.julia_cmd().exec
+        if skip_arg
+            skip_arg = false
+        elseif arg == "--project"
+            skip_arg = true
+        elseif !startswith(arg, "--project=")
+            push!(julia_args, arg)
+        end
+    end
+    return Cmd(julia_args)
+end
+
 if isdefined(SciMLTesting, :run_api_docs)
     _run_qa()
 else
@@ -22,8 +37,9 @@ else
     end
 
     script = "using Pkg; Pkg.instantiate(); include($(repr(@__FILE__)))"
-    cmd = `$(Base.julia_cmd()) --startup-file=no --project=$(@__DIR__) -e $script`
+    cmd = `$(_qa_julia_cmd()) --startup-file=no --project=$(@__DIR__) -e $script`
     withenv("SPARSEMATRIXIDENTIFICATION_QA_SUBPROCESS" => "1") do
-        @test success(cmd)
+        run(cmd)
+        @test true
     end
 end
