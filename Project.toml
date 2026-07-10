@@ -23,6 +23,9 @@ FastAlmostBandedMatricesExt = ["FastAlmostBandedMatrices", "BandedMatrices"]
 SpecialMatricesExt = "SpecialMatrices"
 ToeplitzMatricesExt = "ToeplitzMatrices"
 
+[sources]
+SciMLTesting = {url = "https://github.com/SciML/SciMLTesting.jl", rev = "a5cecca928f2c684c23505c3cd83921d71753e2e"}
+
 [compat]
 AllocCheck = "0.2"
 ArrayInterface = "7.7"
@@ -34,7 +37,7 @@ GPUArrays = "8.4, 9, 10, 11"
 JLArrays = "0.1, 0.2, 0.3"
 LinearAlgebra = "1"
 SafeTestsets = "0.0.1, 0.1, 1"
-SciMLTesting = "1"
+SciMLTesting = "2.1"
 SemiseparableMatrices = "0.4.0"
 SparseArrays = "1"
 SpecialMatrices = "3.1.0"
