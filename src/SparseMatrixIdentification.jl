@@ -341,23 +341,25 @@ export getstructure
 """
     getstructure(A::AbstractMatrix)
 
-Compute structure metrics for a matrix.
+Compute the bandedness and sparsity metrics for `A`.
 
-Returns a tuple `(percentage_banded, percentage_sparsity)` where:
-- `percentage_banded`: The percentage of positions within bandwidth=1 that contain non-zero elements
-- `percentage_sparsity`: The proportion of zero elements in the matrix (1 - density)
+Returns `(percentage_banded, percentage_sparsity)`, where `percentage_banded` is
+the percentage of entries in the bandwidth-1 band that are nonzero, and
+`percentage_sparsity` is the fraction of entries in `A` that are zero.
 
 # Arguments
-- `A::AbstractMatrix`: The input matrix to analyze
+- `A`: matrix to analyze.
 
 # Returns
-- `Tuple{Float64, Float64}`: A tuple of (bandedness percentage, sparsity percentage)
+- `percentage_banded`: percentage of nonzero entries in the bandwidth-1 band.
+- `percentage_sparsity`: fraction of zero entries in `A`.
 
 # Examples
 ```julia
-julia> A = [1 2 0; 3 4 5; 0 6 7]
-julia> getstructure(A)
-(100.0, 0.2222222222222222)
+using SparseMatrixIdentification
+
+A = [1 2 0; 3 4 5; 0 6 7]
+getstructure(A)
 ```
 """
 function getstructure(A::AbstractMatrix)::Any
@@ -391,40 +393,54 @@ const _fastalmostbandedmatrices_loaded = Ref(false)
 """
     try_special_matrices(Ad, n, m)
 
-Extension point for SpecialMatrices.jl. Returns nothing when SpecialMatrices is not loaded.
-When SpecialMatrices is loaded, returns Hilbert, Strang, Vandermonde, or Cauchy if detected.
+Extension hook used by the SpecialMatrices.jl integration.
+
+Extension methods return a `Hilbert`, `Strang`, `Vandermonde`, or `Cauchy`
+matrix when `Ad` matches one of those structures, and `nothing` otherwise.
+The base package defines only the generic function.
 """
 function try_special_matrices end
 
 """
     try_toeplitz(A)
 
-Extension point for ToeplitzMatrices.jl. Returns nothing when ToeplitzMatrices is not loaded.
-When ToeplitzMatrices is loaded, returns Toeplitz if detected.
+Extension hook used by the ToeplitzMatrices.jl integration.
+
+Extension methods return a `Toeplitz` matrix when `A` has constant diagonals,
+and `nothing` otherwise. The base package defines only the generic function.
 """
 function try_toeplitz end
 
 """
     try_blockbanded(Ad, n)
 
-Extension point for BlockBandedMatrices.jl. Returns nothing when BlockBandedMatrices is not loaded.
-When BlockBandedMatrices is loaded, returns BlockBandedMatrix if detected.
+Extension hook used by the BlockBandedMatrices.jl integration.
+
+Extension methods return a `BlockBandedMatrix` when `Ad` has a detected
+block-banded structure, and `nothing` otherwise. The base package defines only
+the generic function.
 """
 function try_blockbanded end
 
 """
     try_almostbanded(Ad, n)
 
-Extension point for FastAlmostBandedMatrices.jl. Returns nothing when FastAlmostBandedMatrices is not loaded.
-When FastAlmostBandedMatrices is loaded, returns AlmostBandedMatrix if detected.
+Extension hook used by the FastAlmostBandedMatrices.jl integration.
+
+Extension methods return an `AlmostBandedMatrix` when `Ad` is banded with
+low-rank fill outside the band, and `nothing` otherwise. The base package
+defines only the generic function.
 """
 function try_almostbanded end
 
 """
     try_banded(A, threshold)
 
-Extension point for BandedMatrices.jl. Returns nothing when BandedMatrices is not loaded.
-When BandedMatrices is loaded, returns BandedMatrix if detected.
+Extension hook used by the BandedMatrices.jl integration.
+
+Extension methods return a `BandedMatrix` when nonzero entries in `A` are
+confined to the `threshold` band, and `nothing` otherwise. The base package
+defines only the generic function.
 """
 function try_banded end
 
@@ -470,12 +486,15 @@ One of the following matrix types based on detected structure:
 
 # Examples
 ```julia
-julia> using SparseArrays
-julia> A = sparse([1 2 2; 2 3 4; 2 4 5])
-julia> sparsestructure(A, 0.5)  # Returns Symmetric
+using LinearAlgebra
+using SparseArrays
+using SparseMatrixIdentification
 
-julia> L = sparse([1 0 0; 2 3 0; 4 5 6])
-julia> sparsestructure(L, 0.5)  # Returns LowerTriangular
+A = sparse([1 2 2; 2 3 4; 2 4 5])
+sparsestructure(A, 0.5) isa Symmetric
+
+L = sparse([1 0 0; 2 3 0; 4 5 6])
+sparsestructure(L, 0.5) isa LowerTriangular
 ```
 """
 function sparsestructure(A::AbstractSparseMatrix, threshold)

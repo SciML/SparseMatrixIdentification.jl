@@ -1,4 +1,4 @@
-using SciMLTesting, SparseMatrixIdentification, Test
+using SciMLTesting, SparseMatrixIdentification
 using JET
 
 run_qa(
@@ -9,4 +9,5 @@ run_qa(
         # ArrayInterface; it is the only non-public name this package accesses.
         all_qualified_accesses_are_public = (; ignore = (:fast_scalar_indexing,)),
     ),
+    api_docs_kwargs = (; rendered = true),
 )

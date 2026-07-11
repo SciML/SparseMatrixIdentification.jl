@@ -10,6 +10,7 @@ makedocs(
     sitename = "SparseMatrixIdentification.jl",
     authors = "Anastasia Dunca",
     modules = [SparseMatrixIdentification],
+    checkdocs = :exports,
     clean = true,
     doctest = false,
     linkcheck = true,
