@@ -1,18 +1,13 @@
 using Documenter
 using SparseMatrixIdentification
 
-cp(
-    joinpath(@__DIR__, "Manifest.toml"), joinpath(@__DIR__, "src/assets/Manifest.toml");
-    force = true
-)
-
 makedocs(
     sitename = "SparseMatrixIdentification.jl",
     authors = "Anastasia Dunca",
     modules = [SparseMatrixIdentification],
     checkdocs = :exports,
     clean = true,
-    doctest = false,
+    doctest = true,
     linkcheck = true,
     format = Documenter.HTML(
         assets = ["assets/favicon.ico"],
