@@ -1,8 +1,7 @@
 module BlockBandedMatricesExt
 
-using SparseMatrixIdentification
-using BlockBandedMatrices
-using BandedMatrices
+using SparseMatrixIdentification: SparseMatrixIdentification
+using BlockBandedMatrices: BlockBandedMatrix
 
 function __init__()
     return SparseMatrixIdentification._blockbandedmatrices_loaded[] = true

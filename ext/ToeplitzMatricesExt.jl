@@ -1,7 +1,7 @@
 module ToeplitzMatricesExt
 
-using SparseMatrixIdentification
-using ToeplitzMatrices
+using SparseMatrixIdentification: SparseMatrixIdentification
+using ToeplitzMatrices: Toeplitz
 
 function __init__()
     return SparseMatrixIdentification._toeplitzmatrices_loaded[] = true

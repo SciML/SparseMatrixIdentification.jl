@@ -1,8 +1,8 @@
 module FastAlmostBandedMatricesExt
 
-using SparseMatrixIdentification
-using FastAlmostBandedMatrices
-using BandedMatrices
+using SparseMatrixIdentification: SparseMatrixIdentification
+using FastAlmostBandedMatrices: AlmostBandedMatrix
+using BandedMatrices: BandedMatrix
 
 function __init__()
     return SparseMatrixIdentification._fastalmostbandedmatrices_loaded[] = true
