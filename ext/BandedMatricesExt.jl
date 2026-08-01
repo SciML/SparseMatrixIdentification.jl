@@ -1,7 +1,7 @@
 module BandedMatricesExt
 
-using SparseMatrixIdentification
-using BandedMatrices
+using SparseMatrixIdentification: SparseMatrixIdentification
+using BandedMatrices: BandedMatrix
 
 function __init__()
     return SparseMatrixIdentification._bandedmatrices_loaded[] = true

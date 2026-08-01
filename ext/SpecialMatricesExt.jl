@@ -1,7 +1,7 @@
 module SpecialMatricesExt
 
-using SparseMatrixIdentification
-using SpecialMatrices
+using SparseMatrixIdentification: SparseMatrixIdentification
+using SpecialMatrices: Cauchy, Hilbert, Strang, Vandermonde
 
 function __init__()
     return SparseMatrixIdentification._specialmatrices_loaded[] = true

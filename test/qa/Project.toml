@@ -1,13 +1,23 @@
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
+BlockBandedMatrices = "ffab5731-97b5-5995-9138-79e8c1846df0"
+FastAlmostBandedMatrices = "9d29842c-ecb8-4973-b1e9-a27b1157504e"
 JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
 SparseMatrixIdentification = "2607229e-3272-44a7-bc4a-cd97a328dfbf"
+SpecialMatrices = "928aab9d-ef52-54ac-8ca1-acd7ca42c160"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
 Aqua = "0.8"
+BandedMatrices = "1.10.2"
+BlockBandedMatrices = "0.13.4"
+FastAlmostBandedMatrices = "0.1.5"
 JET = "0.9,0.10,0.11"
 SciMLTesting = "2.4"
+SpecialMatrices = "3.1.0"
 Test = "1"
+ToeplitzMatrices = "0.8.5"
 julia = "1.10"
