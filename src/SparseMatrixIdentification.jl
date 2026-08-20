@@ -570,4 +570,16 @@ function sparsestructure(A::AbstractSparseMatrix, threshold)
     return SparseMatrixCSC(A)
 end
 
+using PrecompileTools: @compile_workload, @setup_workload
+
+@setup_workload begin
+    @compile_workload begin
+        A = [1.0 2.0 0.0; 2.0 4.0 5.0; 0.0 5.0 6.0]
+        getstructure(A)
+        is_toeplitz(A)
+        is_hilbert([1.0 0.5; 0.5 1 / 3])
+        sparsestructure(SparseMatrixCSC(A), 1 / 3)
+    end
+end
+
 end
